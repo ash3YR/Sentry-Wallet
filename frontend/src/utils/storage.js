@@ -1,4 +1,5 @@
 import CryptoJS from 'crypto-js';
+import { supabase } from './supabaseClient'; // adjust path as needed
 
 const STORAGE_KEY = 'sentry_wallets';
 
@@ -107,3 +108,37 @@ export const loadUserPreferences = () => {
     };
   }
 };
+
+async function getUserWallets(userId) {
+  const { data, error } = await supabase
+    .from('wallets')
+    .select('*')
+    .eq('user_id', userId);
+  if (error) throw error;
+  return data; // array of wallets
+}
+
+async function getWalletById(walletId) {
+  const { data, error } = await supabase
+    .from('wallets')
+    .select('*')
+    .eq('id', walletId)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// Call this when user creates a new wallet
+async function createWallet(userId, encryptedWallet, walletName) {
+  const { data, error } = await supabase
+    .from('wallets')
+    .insert([
+      {
+        user_id: userId,
+        encrypted_wallet: encryptedWallet,
+        wallet_name: walletName, // optional
+      },
+    ]);
+  if (error) throw error;
+  return data;
+}
